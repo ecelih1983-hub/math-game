@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>أبطال جدول التسعة</title>
+<style>
+:root{--navy:#172554;--blue:#2563eb;--gold:#facc15;--ink:#172033}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:Tahoma,Arial,sans-serif;background:linear-gradient(135deg,#dbeafe,#fce7f3 55%,#fef3c7);color:var(--ink);display:grid;place-items:center;padding:18px}
+.game{width:min(100%,520px);background:#fff;border-radius:28px;overflow:hidden;box-shadow:0 18px 55px #1e3a8a25}
+header{background:linear-gradient(135deg,#172554,#1d4ed8);color:#fff;text-align:center;padding:25px 20px}
+header .emoji{font-size:42px}h1{font-size:27px;margin:8px 0}header p{margin:0;color:#dbeafe}
+main{padding:22px}
+.stats{display:flex;justify-content:space-between;gap:10px;margin-bottom:18px}
+.stat{background:#eff6ff;border-radius:14px;padding:10px 14px;font-weight:bold;color:#1e40af}
+.track{height:10px;background:#e5e7eb;border-radius:20px;overflow:hidden;margin:10px 0 24px}
+.fill{height:100%;width:0;background:linear-gradient(90deg,#f59e0b,#facc15);transition:width .3s}
+.question{text-align:center;background:#f8fafc;border:2px dashed #bfdbfe;border-radius:20px;padding:22px 10px;margin-bottom:18px}
+.question small{color:#64748b;font-weight:bold}.equation{font-size:42px;font-weight:900;color:#1d4ed8;margin-top:8px}
+.answers{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.answer{border:0;border-radius:16px;padding:17px;font-size:25px;font-weight:bold;background:#eff6ff;color:#1e40af;cursor:pointer;transition:.15s}
+.answer:hover{transform:translateY(-2px);background:#dbeafe}
+.answer:disabled{cursor:default;opacity:1}
+.answer.correct{background:#dcfce7;color:#166534;outline:3px solid #22c55e}
+.answer.wrong{background:#fee2e2;color:#991b1b;outline:3px solid #ef4444}
+.feedback{min-height:44px;text-align:center;font-size:18px;font-weight:bold;margin:15px 0 5px}
+button.primary{width:100%;border:0;border-radius:15px;padding:15px;background:#f59e0b;color:#422006;font-size:18px;font-weight:900;cursor:pointer}
+button.primary:disabled{opacity:.45;cursor:not-allowed}
+footer{text-align:center;color:#64748b;font-size:12px;padding:0 15px 18px}
+.result{text-align:center;padding:18px 5px}
+.result .cup{font-size:76px}.result h2{font-size:28px;color:#1d4ed8}
+.hidden{display:none}
+@media(max-width:380px){.equation{font-size:35px}.answer{padding:14px}}
+</style>
+</head>
+<body>
+<section class="game" aria-live="polite">
+<header><div class="emoji">🚀⭐</div><h1>أبطال جدول التسعة</h1><p>جاوب صح واجمع النجوم لتفوز بالكأس!</p></header>
+<main>
+<div id="play">
+<div class="stats"><div class="stat">⭐ النقاط: <span id="score">0</span></div><div class="stat">السؤال: <span id="number">1</span> / 9</div></div>
+<div class="track"><div class="fill" id="progress"></div></div>
+<div class="question"><small>اختر الإجابة الصحيحة</small><div class="equation" id="equation">9 × 1 = ؟</div></div>
+<div class="answers" id="answers"></div>
+<div class="feedback" id="feedback">أنت قدّها! 💪</div>
+<button class="primary" id="next" disabled>السؤال التالي ←</button>
+</div>
+<div id="result" class="result hidden">
+<div class="cup">🏆</div><h2 id="resultTitle">بطل جدول التسعة!</h2>
+<p id="resultText"></p>
+<button class="primary" id="again">العب مرة ثانية 🔄</button>
+</div>
+</main>
+<footer>لعبة تعليمية مجانية • تعمل على الهاتف والكمبيوتر</footer>
+</section>
+<script>
+const questions=[1,2,3,4,5,6,7,8,9];
+let index=0,score=0,locked=false;
+const $=id=>document.getElementById(id);
+function shuffle(a){return [...a].sort(()=>Math.random()-.5)}
+function render(){
+ locked=false;$('number').textContent=index+1;$('score').textContent=score;
+ $('progress').style.width=(index/9*100)+'%';
+ $('equation').textContent=`9 × ${questions[index]} = ؟`;
+ $('feedback').textContent='أنت قدّها! اختر جوابك 💪';$('next').disabled=true;
+ const correct=9*questions[index];
+ const opts=shuffle([correct,correct+2,correct-3,correct+5]);
+ $('answers').innerHTML='';
+ opts.forEach(v=>{const b=document.createElement('button');b.className='answer';b.textContent=v;b.onclick=()=>choose(b,v,correct);$('answers').appendChild(b)});
+}
+function choose(btn,value,correct){
+ if(locked)return;locked=true;
+ [...$('answers').children].forEach(b=>{b.disabled=true;if(Number(b.textContent)===correct)b.classList.add('correct')});
+ if(value===correct){score++;$('feedback').textContent='ممتاز! إجابة صحيحة 🎉';}
+ else{btn.classList.add('wrong');$('feedback').textContent=`قريب! الإجابة الصحيحة هي ${correct} 🌟`;}
+ $('score').textContent=score;$('next').disabled=false;
+ $('next').textContent=index===8?'شاهد نتيجتك 🏆':'السؤال التالي ←';
+}
+$('next').onclick=()=>{
+ if(!locked)return;
+ if(index<8){index++;render();}
+ else{
+ $('play').classList.add('hidden');$('result').classList.remove('hidden');
+ $('progress').style.width='100%';
+ $('resultTitle').textContent=score===9?'أسطورة جدول التسعة! 👑':score>=6?'أحسنت يا بطل! 🌟':'بداية حلوة! 💪';
+ $('resultText').textContent=`حصلت على ${score} من 9 نقاط. ${score===9?'كل الإجابات صحيحة، تستحق الكأس!':'جرّب مرة ثانية وحاول تحطّم رقمك!'}`;
+ }
+};
+$('again').onclick=()=>{index=0;score=0;$('result').classList.add('hidden');$('play').classList.remove('hidden');render()};
+render();
+</script>
+</body>
+</html>
